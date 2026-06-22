@@ -13,16 +13,24 @@ struct HasilUkur {
     int kategori;     // Indeks kategori (0..7)
 };
 
+enum StateDeteksi { IDLE, MENGUKUR_MASUK, MENUNGGU_KELUAR, MENGUKUR_LEBAR, SELESAI };
+
 class PengukurDimensi {
   public:
-    PengukurDimensi();
-    void debug(HasilUkur h, long total);
     void begin();
+    void debug(HasilUkur h, long total);
     bool adaBenda();
-    HasilUkur ukur(bool (*adaApi)());
+    bool update(HasilUkur &hasil, bool (*adaApi)());
 
   private:
     bool _terhalang(uint8_t pin);
+
+    StateDeteksi stateSekarang;
+    unsigned long waktuMasuk;
+    unsigned long waktuLepas;
+    bool statusTinggi;
+    bool statusLebar;
+    bool pernahKenaLebar;
 };
 
 #endif

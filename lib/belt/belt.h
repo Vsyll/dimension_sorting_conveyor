@@ -8,7 +8,7 @@ class Belt {
   public:
     Belt();
     void begin();
-    void run(bool aktif, int duty);
+    void setSpeed(int duty);
     
 };
 
