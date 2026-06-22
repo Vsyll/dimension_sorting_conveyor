@@ -1,4 +1,3 @@
-
 #define BLYNK_TEMPLATE_ID   "Tubes INSTRU"
 #define BLYNK_TEMPLATE_NAME "TUBES"
 #define BLYNK_AUTH_TOKEN    "c1quVSxtfWCxQF4IEdBvp48NHHedn5CZ"
@@ -117,6 +116,7 @@ void setup() {
 // ---- Loop Utama Operasional (NON-BLOCKING) ----
 void loop() {
     Blynk.run(); // Selalu responsif, anti disconnect
+    sorter.update();
     
     // 1. Cek Emergency
     if (cekEmergency()) return; 
@@ -130,6 +130,8 @@ void loop() {
         // JIKA MASUK SINI: Berarti benda baru saja LOLOS dari pintu keluar terowongan
         totalBarang++;
         
+        sorter.keKategori(dataBenda.kategori);
+        
         // Tampilkan info estetik
         oled.displayHasil(dataBenda.kategori + 1, NAMA_KAT[dataBenda.kategori], dataBenda.P, dataBenda.lebar, dataBenda.tinggi);
         detektor.debug(dataBenda, totalBarang);
@@ -141,7 +143,6 @@ void loop() {
         Blynk.virtualWrite(VP_BARANG, NAMA_KAT[dataBenda.kategori]);
         Blynk.virtualWrite(VP_TOTAL, totalBarang);
 
-        // Kunci data benda untuk diproses sorting nanti saat sampai ujung chute
         butuhSorting = true;
         waktuSelesaiUkur = millis();
         kategoriTertunda = dataBenda.kategori;
@@ -149,8 +150,6 @@ void loop() {
 
     // 3. Eksekusi Pergerakan Servo Korsel (Mengikuti Waktu Perjalanan Dinamis)
     if (butuhSorting && (millis() - waktuSelesaiUkur >= waktuTravelAktif)) {
-        // Benda diprediksi sudah meluncur tepat di ujung chute pembuangan
-        sorter.keKategori(kategoriTertunda);
         butuhSorting = false; // Reset penanda, siap tunggu benda berikutnya
     }
 }

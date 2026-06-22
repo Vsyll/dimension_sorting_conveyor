@@ -5,6 +5,9 @@
 
 // ===== Pin Servo & Relay =====
 #define PIN_SERVO           13   // Servo 180 deg posisional (chute pengarah)
+inline constexpr int   SERVO_STEP_DEG      = 2;    // Besar sudut setiap satu langkah (derajat)
+inline constexpr int   SERVO_STEP_INTERVAL = 15;   // Jeda waktu antar langkah (milidetik)
+
 #define PIN_RELAY           27   // Relay cut-off (emergency)
 
 // ===== Motor Config (L298N IN1) =====
