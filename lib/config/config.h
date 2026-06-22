@@ -9,7 +9,7 @@
 
 // ===== Motor Config (L298N IN1) =====
 #define PIN_MOTOR           14   // PWM langsung ke IN1 L298N (IN2 -> GND, ENA -> 5V)
-#define INITIAL_MOTOR_DUTY  140  // Kecepatan awal (0-255)
+#define INITIAL_MOTOR_DUTY  187  // Kecepatan awal (0-255)
 #define MOTOR_PWM_FREQ      4000 // Frekuensi PWM dalam Hz (4 kHz)
 
 // ====== Pin Sensor ======
