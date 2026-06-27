@@ -70,7 +70,7 @@ bool PengukurDimensi::update(HasilUkur &hasil, bool (*adaApi)()) {
                 stateSekarang = MENGUKUR_LEBAR;
             }
             
-            // Fail-safe Timeout: Jika benda macet di dalam terowongan selama 3 detik
+            // Fail-safe Timeout
             if ((millis() - waktuMasuk) > WAKTU_KE_UJUNG_MS) {
                 stateSekarang = SELESAI;
             }

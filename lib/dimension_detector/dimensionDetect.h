@@ -17,6 +17,7 @@ enum StateDeteksi { IDLE, MENGUKUR_MASUK, MENUNGGU_KELUAR, MENGUKUR_LEBAR, SELES
 
 class PengukurDimensi {
   public:
+    PengukurDimensi();
     void begin();
     void debug(HasilUkur h, long total);
     bool adaBenda();
