@@ -88,7 +88,7 @@ BLYNK_WRITE(VP_RESET) {
 
 BLYNK_CONNECTED() {
     Blynk.virtualWrite(VP_TOTAL, totalBarang);
-    Blynk.virtualWrite(VP_START, 0);  // pastikan tombol start OFF saat reconnect
+    Blynk.virtualWrite(VP_START, 1);  // sync tombol Blynk jadi ON
 }
 
 void setup() {
@@ -103,6 +103,8 @@ void setup() {
     belt.setSpeed(0);  // mulai dalam kondisi stop
     pengaman.begin();
     sorter.begin();
+
+    sistemBerjalan = true;  // ← langsung set true sebelum Blynk konek
 
     Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
     Blynk.virtualWrite(VP_STATUS, "SISTEM SIAP");
