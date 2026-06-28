@@ -24,6 +24,7 @@ Belt            belt;
 PengamanApi     pengaman;
 
 bool blynkEmergencyTrigger = false;
+bool sistemBerjalan = false;  // ← tambahan
 long totalBarang = 0;
 
 int kecepatanMotorSekarang = INITIAL_MOTOR_DUTY;
@@ -48,12 +49,18 @@ bool cekEmergency() {
     return false;
 }
 
-BLYNK_WRITE(VP_SPEED) {
-    kecepatanMotorSekarang = param.asInt();
-    if (!pengaman.sedangEmergency() && !blynkEmergencyTrigger) {
+// ← tambahan handler start/stop
+BLYNK_WRITE(VP_START) {
+    sistemBerjalan = param.asInt();
+    if (sistemBerjalan) {
         belt.setSpeed(kecepatanMotorSekarang);
+        lcd.displayStandby();
+        Blynk.virtualWrite(VP_STATUS, "CONVEYOR RUNNING");
+    } else {
+        belt.setSpeed(0);
+        lcd.displayStandby();
+        Blynk.virtualWrite(VP_STATUS, "CONVEYOR STOP");
     }
-    waktuTravelAktif = map(kecepatanMotorSekarang, 100, 255, 4200, 1600);
 }
 
 BLYNK_WRITE(VP_EMERG) {
@@ -66,15 +73,22 @@ BLYNK_WRITE(VP_RESET) {
     if (param.asInt() == 1) {
         pengaman.reset();
         blynkEmergencyTrigger = false;
+        totalBarang = 0;
+        butuhSorting = false;                   // ← reset flag sorting
+        sorter.keKategori(0);                   // ← balik servo ke posisi awal
         Blynk.virtualWrite(VP_EMERG, 0);
+        Blynk.virtualWrite(VP_TOTAL, 0);
         Blynk.virtualWrite(VP_STATUS, "SISTEM NORMAL");
         lcd.displayStandby();
-        belt.setSpeed(kecepatanMotorSekarang);
+        if (sistemBerjalan) {
+            belt.setSpeed(kecepatanMotorSekarang);
+        }
     }
 }
 
 BLYNK_CONNECTED() {
     Blynk.virtualWrite(VP_TOTAL, totalBarang);
+    Blynk.virtualWrite(VP_START, 0);  // pastikan tombol start OFF saat reconnect
 }
 
 void setup() {
@@ -86,54 +100,50 @@ void setup() {
 
     detektor.begin();
     belt.begin();
+    belt.setSpeed(0);  // mulai dalam kondisi stop
     pengaman.begin();
     sorter.begin();
 
     Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
     Blynk.virtualWrite(VP_STATUS, "SISTEM SIAP");
+    Blynk.virtualWrite(VP_START, 0);
 }
 
 void loop() {
     Blynk.run();
-    sorter.update(); // Tetap update langkah servo per step
-    
-    if (cekEmergency()) return; 
+    sorter.update();
 
-    // OLEH-OLEH: Kirim ke Blynk dipindah ke setup / saat ada perubahan saja, 
-    // JANGAN ditaruh di sini tanpa timer karena bikin sensor tidak sensitif!
+    if (cekEmergency()) return;
+    if (!sistemBerjalan) return;  // ← stop semua jika belum di-start
 
-    // HANYA BACA SENSOR JIKA TIDAK SEDANG MENUNGGU SORTING BARANG SEBELUMNYA
     if (!butuhSorting) {
         HasilUkur dataBenda;
-        
+
         if (detektor.update(dataBenda, cekEmergency)) {
             totalBarang++;
-            
-            // Servo langsung gerak curi start
+
             sorter.keKategori(dataBenda.kategori);
-            
-            // Update Tampilan
-            lcd.displayHasil(dataBenda.kategori + 1, NAMA_KAT[dataBenda.kategori], dataBenda.P, dataBenda.lebar, dataBenda.tinggi);
+
+            lcd.displayHasil(dataBenda.kategori + 1, NAMA_KAT[dataBenda.kategori],
+                             dataBenda.P, dataBenda.lebar, dataBenda.tinggi);
             detektor.debug(dataBenda, totalBarang);
-    
-            // Update Blynk sekali saja saat benda terdeteksi
+
             char statusStr[32];
-            snprintf(statusStr, sizeof(statusStr), "%s (Slot %d)", NAMA_KAT[dataBenda.kategori], dataBenda.kategori + 1);
+            snprintf(statusStr, sizeof(statusStr), "%s (Slot %d)",
+                     NAMA_KAT[dataBenda.kategori], dataBenda.kategori + 1);
             Blynk.virtualWrite(VP_STATUS, statusStr);
             Blynk.virtualWrite(VP_BARANG, NAMA_KAT[dataBenda.kategori]);
             Blynk.virtualWrite(VP_TOTAL, totalBarang);
             Blynk.virtualWrite(VP_LED, 255);
-    
-            // Kunci sistem
+
             butuhSorting = true;
             waktuSelesaiUkur = millis();
             kategoriTertunda = dataBenda.kategori;
         }
     }
 
-    // TIMER UNTUK MELEPAS KUNCI ANT REAN
     if (butuhSorting && (millis() - waktuSelesaiUkur >= waktuTravelAktif)) {
-        butuhSorting = false; // Buka kunci, di titik ini terowongan baru boleh mendeteksi jari/benda lagi
+        butuhSorting = false;
         Blynk.virtualWrite(VP_STATUS, "CONVEYOR RUNNING");
     }
 }

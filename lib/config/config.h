@@ -40,7 +40,7 @@ inline constexpr int   SERVO_STEP_INTERVAL = 20;
 // ===== Kalibrasi =====
 inline constexpr float         BELT_CM_PER_S        = 16.778;
 inline constexpr int           FLAME_AMBANG         = 1600;
-inline constexpr uint16_t       TIMEOUT_HOUSING_MS  = 1000;
+inline constexpr uint16_t      TIMEOUT_HOUSING_MS   = 700;
 inline constexpr float         PANJANG_AMBANG_MM    = 43.0;
 inline constexpr float         DIM_MAKS             = 78.0;
 inline constexpr unsigned long WAKTU_KE_UJUNG_MS    = 1810;
