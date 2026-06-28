@@ -28,7 +28,7 @@ void PengarahChute::keKategori(int kategori) {
     keSudut(targetSudut);
 }
 
-// FUNGSI NON-BLOCKING UTAMA UNTUK UPDATE GERAKAN STEP SERVO
+// FUNGSI NON-BLOCKING UTAMA UNTUK UPDATE GERAKAN STEP SERVO (VERSI DINAMIS)
 void PengarahChute::update() {
     // Jika posisi sekarang sudah sama dengan target, tidak perlu melangkah
     if (_sudutSekarang == _sudutTarget) return;
@@ -37,14 +37,29 @@ void PengarahChute::update() {
     if (millis() - _waktuLangkahTerakhir >= SERVO_STEP_INTERVAL) {
         _waktuLangkahTerakhir = millis();
 
+        // 1. HITUNG JARAK (ERROR) ANTARA POSISI SEKARANG DENGAN TARGET
+        int selisihSudut = abs(_sudutTarget - _sudutSekarang);
+
+        // 2. TENTUKAN STEP SECARA DINAMIS (Makin jauh, makin besar step-nya)
+        int stepDinamis = SERVO_STEP_DEG; // Nilai default dari config.h (7 derajat)
+
+        if (selisihSudut > 90) {
+            stepDinamis = 20; // Jarak sangat jauh (beda > 90 derajat): Lompat 20 derajat sekaligus biar ngebut
+        } else if (selisihSudut > 45) {
+            stepDinamis = 12; // Jarak sedang (beda > 45 derajat): Lompat 12 derajat
+        } else if (selisihSudut < 15) {
+            stepDinamis = 3;  // Sudah dekat (beda < 15 derajat): Ngerem halus, melangkah 3 derajat saja biar presisi
+        }
+
+        // 3. JALANKAN PERGERAKAN BERDASARKAN STEP DINAMIS
         // Jika target lebih besar, tambah sudut saat ini
         if (_sudutSekarang < _sudutTarget) {
-            _sudutSekarang += SERVO_STEP_DEG;
+            _sudutSekarang += stepDinamis;
             if (_sudutSekarang > _sudutTarget) _sudutSekarang = _sudutTarget; // Proteksi kebablasan
         } 
         // Jika target lebih kecil, kurangi sudut saat ini
         else {
-            _sudutSekarang -= SERVO_STEP_DEG;
+            _sudutSekarang -= stepDinamis;
             if (_sudutSekarang < _sudutTarget) _sudutSekarang = _sudutTarget; // Proteksi kebablasan
         }
 

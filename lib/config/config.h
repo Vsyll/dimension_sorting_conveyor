@@ -38,11 +38,12 @@ inline constexpr int   SERVO_STEP_INTERVAL = 5;
 #define VP_BARANG           V7
 
 // ===== Kalibrasi =====
-inline constexpr float         BELT_CM_PER_S     = 22.651;
-inline constexpr int           FLAME_AMBANG      = 1600;
-inline constexpr unsigned long WAKTU_KE_UJUNG_MS = 57;
-inline constexpr float         PANJANG_AMBANG_MM = 35.0;
-inline constexpr float         DIM_MAKS          = 70.0;
+inline constexpr float         BELT_CM_PER_S        = 16.778;
+inline constexpr int           FLAME_AMBANG         = 1600;
+inline constexpr uint16_t       TIMEOUT_HOUSING_MS  = 1000;
+inline constexpr float         PANJANG_AMBANG_MM    = 35.0;
+inline constexpr float         DIM_MAKS             = 80.0;
+inline constexpr unsigned long WAKTU_KE_UJUNG_MS    = 1810;
 
 inline constexpr int SUDUT_SLOT[8] = {101, 146, 34, 124, 79, 169, 56, 11};
 

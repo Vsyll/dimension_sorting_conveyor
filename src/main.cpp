@@ -95,36 +95,45 @@ void setup() {
 
 void loop() {
     Blynk.run();
-    sorter.update();
+    sorter.update(); // Tetap update langkah servo per step
+    
+    if (cekEmergency()) return; 
 
-    if (cekEmergency()) return;
+    // OLEH-OLEH: Kirim ke Blynk dipindah ke setup / saat ada perubahan saja, 
+    // JANGAN ditaruh di sini tanpa timer karena bikin sensor tidak sensitif!
 
-    Blynk.virtualWrite(VP_LED, 255);
-    Blynk.virtualWrite(VP_STATUS, "CONVEYOR RUNNING");
-
-    HasilUkur dataBenda;
-    if (detektor.update(dataBenda, cekEmergency)) {
-        totalBarang++;
-
-        sorter.keKategori(dataBenda.kategori);
-
-        lcd.displayHasil(dataBenda.kategori + 1, NAMA_KAT[dataBenda.kategori],
-                         dataBenda.P, dataBenda.lebar, dataBenda.tinggi);
-        detektor.debug(dataBenda, totalBarang);
-
-        char statusStr[32];
-        snprintf(statusStr, sizeof(statusStr), "%s (Slot %d)",
-                 NAMA_KAT[dataBenda.kategori], dataBenda.kategori + 1);
-        Blynk.virtualWrite(VP_STATUS, statusStr);
-        Blynk.virtualWrite(VP_BARANG, NAMA_KAT[dataBenda.kategori]);
-        Blynk.virtualWrite(VP_TOTAL, totalBarang);
-
-        butuhSorting = true;
-        waktuSelesaiUkur = millis();
-        kategoriTertunda = dataBenda.kategori;
+    // HANYA BACA SENSOR JIKA TIDAK SEDANG MENUNGGU SORTING BARANG SEBELUMNYA
+    if (!butuhSorting) {
+        HasilUkur dataBenda;
+        
+        if (detektor.update(dataBenda, cekEmergency)) {
+            totalBarang++;
+            
+            // Servo langsung gerak curi start
+            sorter.keKategori(dataBenda.kategori);
+            
+            // Update Tampilan
+            lcd.displayHasil(dataBenda.kategori + 1, NAMA_KAT[dataBenda.kategori], dataBenda.P, dataBenda.lebar, dataBenda.tinggi);
+            detektor.debug(dataBenda, totalBarang);
+    
+            // Update Blynk sekali saja saat benda terdeteksi
+            char statusStr[32];
+            snprintf(statusStr, sizeof(statusStr), "%s (Slot %d)", NAMA_KAT[dataBenda.kategori], dataBenda.kategori + 1);
+            Blynk.virtualWrite(VP_STATUS, statusStr);
+            Blynk.virtualWrite(VP_BARANG, NAMA_KAT[dataBenda.kategori]);
+            Blynk.virtualWrite(VP_TOTAL, totalBarang);
+            Blynk.virtualWrite(VP_LED, 255);
+    
+            // Kunci sistem
+            butuhSorting = true;
+            waktuSelesaiUkur = millis();
+            kategoriTertunda = dataBenda.kategori;
+        }
     }
 
+    // TIMER UNTUK MELEPAS KUNCI ANT REAN
     if (butuhSorting && (millis() - waktuSelesaiUkur >= waktuTravelAktif)) {
-        butuhSorting = false;
+        butuhSorting = false; // Buka kunci, di titik ini terowongan baru boleh mendeteksi jari/benda lagi
+        Blynk.virtualWrite(VP_STATUS, "CONVEYOR RUNNING");
     }
 }

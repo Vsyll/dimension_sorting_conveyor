@@ -51,47 +51,59 @@ bool PengukurDimensi::update(HasilUkur &hasil, bool (*adaApi)()) {
             } else {
                 // Benda sudah lolos dari sensor panjang
                 if (waktuLepas > 0) {
-                    stateSekarang = MENUNGGU_KELUAR;
+                    // PERBAIKAN: Jika saat lepas dari sensor panjang ternyata sensor lebar SUDAH KENA,
+                    // langsung lompat ke MENGUKUR_LEBAR, jika belum baru MENUNGGU_KELUAR
+                    if (statusLebar) {
+                        stateSekarang = MENGUKUR_LEBAR;
+                    } else {
+                        stateSekarang = MENUNGGU_KELUAR;
+                    }
                 }
             }
             
-            // Intip sensor tinggi (karena posisinya di atas sensor panjang)
+            // Intip sensor tinggi (Aman)
             if (_terhalang(PIN_IR_TINGGI)) {
                 statusTinggi = true;
+            }
+
+            // PERBAIKAN KRUSIAL: Intip sensor lebar sejak di sini! 
+            // Jadi kalau bagian depan benda kena sensor lebar duluan, langsung tercatat.
+            if (_terhalang(PIN_IR_LEBAR_L) && _terhalang(PIN_IR_LEBAR_R)) {
+                statusLebar = true;
+                pernahKenaLebar = true;
             }
             break;
 
         case MENUNGGU_KELUAR:
-            // Kondisi 3: Benda lepas dari pintu masuk, sedang berjalan di dalam rumahan kosong
-            // Menunggu sampai bagian depan benda menyentuh sensor lebar di ujung keluar
+            // Kondisi 3: Menunggu benda menyentuh sensor lebar (untuk benda pendek/tipis)
             if (_terhalang(PIN_IR_LEBAR_L) && _terhalang(PIN_IR_LEBAR_R)) {
                 statusLebar = true;
                 pernahKenaLebar = true;
                 stateSekarang = MENGUKUR_LEBAR;
             }
             
-            // Fail-safe Timeout
-            if ((millis() - waktuMasuk) > WAKTU_KE_UJUNG_MS) {
+            // Fail-safe Timeout (Sekarang bisa dikembalikan ke 57 ms dengan aman)
+            if ((millis() - waktuMasuk) > TIMEOUT_HOUSING_MS) {
                 stateSekarang = SELESAI;
+                Serial.println(waktuMasuk);
+                Serial.println(millis());
             }
             break;
 
         case MENGUKUR_LEBAR:
-            // Kondisi 4: Benda sedang melewati sensor lebar di pintu keluar
-            // Tunggu sampai ekor benda lepas total dari sensor lebar
+            // Kondisi 4: Tunggu sampai ekor benda lepas total dari sensor lebar
             if (!_terhalang(PIN_IR_LEBAR_L) && !_terhalang(PIN_IR_LEBAR_R)) {
                 stateSekarang = SELESAI;
             }
             break;
 
-        case SELESAI:
-            // Kondisi 5: Benda sudah keluar total, saatnya kalkulasi data
-            if (waktuLepas == 0) waktuLepas = millis();
-            
-            unsigned long durasiObjekLewat = waktuLepas - waktuMasuk;
+        case SELESAI: { 
+            // Ambil waktu lepas yang valid. Jika dipicu timeout, gunakan catatan waktu lepas terakhir yang terekam
+            unsigned long waktuSelesaiMurni = (waktuLepas > 0) ? waktuLepas : millis();
+            unsigned long durasiObjekLewat = waktuSelesaiMurni - waktuMasuk;
             
             HasilUkur h;
-            h.P = BELT_CM_PER_S * (durasiObjekLewat / 1000.0) * 10.0;
+            h.P = BELT_CM_PER_S * ((float)durasiObjekLewat / 1000.0) * 10.0; 
             
             if (h.P > DIM_MAKS) h.P = DIM_MAKS;
             
@@ -100,12 +112,21 @@ bool PengukurDimensi::update(HasilUkur &hasil, bool (*adaApi)()) {
             h.tinggi   = statusTinggi;
             h.kategori = (h.panjang ? 4 : 0) + (h.lebar ? 2 : 0) + (h.tinggi ? 1 : 0);
             
-            hasil = h;            // Kirim data kembali ke main.ino via referensi
-            stateSekarang = IDLE; // Reset kembali ke awal untuk bersiap ke benda berikutnya
-            return true;          // Return TRUE menandakan data sudah valid & siap diproses sorting
+            // ===== PRINT KALIBRASI UNTUK AHMAD =====
+            Serial.println("\n========== DATA KALIBRASI ESP32 ==========");
+            Serial.print("Durasi Terhalang Murni : "); Serial.print(durasiObjekLewat); Serial.println(" ms");
+            Serial.print("Durasi dalam Detik     : "); Serial.print((float)durasiObjekLewat / 1000.0, 4); Serial.println(" s");
+            Serial.print("Panjang Akhir (h.P)    : "); Serial.print(h.P); Serial.println(" mm");
+            Serial.print("Status S/L/T           : "); 
+            Serial.printf("P:%d | L:%d | T:%d\n", h.panjang, h.lebar, h.tinggi);
+            Serial.println("==========================================\n");
+            
+            hasil = h;            // Kirim data kembali via referensi
+            stateSekarang = IDLE; // Reset kembali ke awal
+            return true;          // Return TRUE menandakan data sudah siap
+        }
     }
-    
-    return false; // Return FALSE berarti benda masih berproses di dalam terowongan
+    return false;
 }
 
 // Fungsi internal pembacaan logika IR_ON (LOW)
