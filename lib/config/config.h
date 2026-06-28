@@ -5,8 +5,8 @@
 
 // ===== Pin Servo & Relay =====
 #define PIN_SERVO           13
-inline constexpr int   SERVO_STEP_DEG      = 7;
-inline constexpr int   SERVO_STEP_INTERVAL = 5;
+inline constexpr int   SERVO_STEP_DEG      = 3;
+inline constexpr int   SERVO_STEP_INTERVAL = 20;
 
 #define PIN_RELAY           27
 
@@ -41,11 +41,11 @@ inline constexpr int   SERVO_STEP_INTERVAL = 5;
 inline constexpr float         BELT_CM_PER_S        = 16.778;
 inline constexpr int           FLAME_AMBANG         = 1600;
 inline constexpr uint16_t       TIMEOUT_HOUSING_MS  = 1000;
-inline constexpr float         PANJANG_AMBANG_MM    = 35.0;
+inline constexpr float         PANJANG_AMBANG_MM    = 45.0;
 inline constexpr float         DIM_MAKS             = 80.0;
 inline constexpr unsigned long WAKTU_KE_UJUNG_MS    = 1810;
 
-inline constexpr int SUDUT_SLOT[8] = {101, 146, 34, 124, 79, 169, 56, 11};
+inline constexpr int SUDUT_SLOT[8] = {101, 155, 34, 114, 79, 175, 56, 11};
 
 inline const char* const NAMA_KAT[8] = {
     "K-C-R", "K-C-T", "K-L-R", "K-L-T",

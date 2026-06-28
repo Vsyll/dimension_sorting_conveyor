@@ -2,7 +2,7 @@
 
 // Constructor
 PengarahChute::PengarahChute() {
-    _sudutSekarang = SUDUT_SLOT[0]; // Set awal sesuai slot pertama
+    _sudutSekarang = 90; // Set awal sesuai slot pertama
     _sudutTarget = SUDUT_SLOT[0];
     _waktuLangkahTerakhir = 0;
 }
@@ -13,7 +13,14 @@ void PengarahChute::begin() {
     _servo.attach(PIN_SERVO, 500, 2400); 
     
     // Set posisi fisik awal ke slot pertama
-    _servo.write(_sudutSekarang);
+    while (_sudutSekarang != _sudutTarget) {
+        // Panggil fungsi update() internal untuk menggerakkan servo per step
+        // Kita panggil menggunakan pointer 'this' karena kita berada di dalam class itu sendiri
+        this->update(); 
+        
+        // Beri sedikit delay mikro (1ms) agar ESP32 tidak menganggap loop ini hang/WDT reset
+        delay(1); 
+    }
 }
 
 // Mengubah target sudut secara aman
@@ -44,11 +51,11 @@ void PengarahChute::update() {
         int stepDinamis = SERVO_STEP_DEG; // Nilai default dari config.h (7 derajat)
 
         if (selisihSudut > 90) {
-            stepDinamis = 20; // Jarak sangat jauh (beda > 90 derajat): Lompat 20 derajat sekaligus biar ngebut
+            stepDinamis = 5;
         } else if (selisihSudut > 45) {
-            stepDinamis = 12; // Jarak sedang (beda > 45 derajat): Lompat 12 derajat
+            stepDinamis = 3;
         } else if (selisihSudut < 15) {
-            stepDinamis = 3;  // Sudah dekat (beda < 15 derajat): Ngerem halus, melangkah 3 derajat saja biar presisi
+            stepDinamis = 1;
         }
 
         // 3. JALANKAN PERGERAKAN BERDASARKAN STEP DINAMIS
