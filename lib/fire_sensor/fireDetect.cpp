@@ -16,7 +16,8 @@ void PengamanApi::begin() {
     pinMode(PIN_FLAME, INPUT); // Pin 34 input-only
     
     // Nyalakan daya aktuator di awal (kondisi aman)
-    digitalWrite(PIN_RELAY, RELAY_AKTIF); 
+    digitalWrite(PIN_RELAY, RELAY_AKTIF);
+    digitalWrite(PIN_LED_RELAY, LOW); 
     _emergency = false;
 }
 
@@ -27,6 +28,7 @@ bool PengamanApi::cek() {
     if (analogRead(PIN_FLAME) < FLAME_AMBANG) {
         _emergency = true;
         digitalWrite(PIN_RELAY, RELAY_PUTUS); // Putus aliran daya utama secara instan
+        digitalWrite(PIN_LED_RELAY, HIGH);
     }
     return _emergency;
 }
@@ -35,6 +37,7 @@ bool PengamanApi::cek() {
 void PengamanApi::reset() {
     _emergency = false;
     digitalWrite(PIN_RELAY, RELAY_AKTIF); // Hubungkan kembali daya utama
+    digitalWrite(PIN_LED_RELAY, LOW);
 }
 
 // Mengambil status terkini
