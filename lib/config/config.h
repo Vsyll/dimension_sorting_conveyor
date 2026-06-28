@@ -45,7 +45,7 @@ inline constexpr float         PANJANG_AMBANG_MM    = 43.0;
 inline constexpr float         DIM_MAKS             = 78.0;
 inline constexpr unsigned long WAKTU_KE_UJUNG_MS    = 1810;
 
-inline constexpr int SUDUT_SLOT[8] = {101, 155, 34, 114, 79, 175, 56, 11};
+inline constexpr int SUDUT_SLOT[8] = {101, 155, 34, 110, 79, 175, 56, 11};
 
 inline const char* const NAMA_KAT[8] = {
     "K-C-R", "K-C-T", "K-L-R", "K-L-T",
