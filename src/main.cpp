@@ -89,6 +89,7 @@ BLYNK_WRITE(VP_RESET) {
 BLYNK_CONNECTED() {
     Blynk.virtualWrite(VP_TOTAL, totalBarang);
     Blynk.virtualWrite(VP_START, 1);  // sync tombol Blynk jadi ON
+    Blynk.syncVirtual(VP_START);  // 
 }
 
 void setup() {

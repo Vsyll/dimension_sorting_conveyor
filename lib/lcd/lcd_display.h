@@ -23,7 +23,7 @@ class LcdDisplay {
         _lcd.setCursor(0, 0);
         _lcd.print("DIMENSION SORTER");
         _lcd.setCursor(4, 1);
-        _lcd.print("UNSOED");
+        _lcd.print("KELOMPOK 11");
         delay(2000);
         clear();
     }

@@ -9,6 +9,7 @@ inline constexpr int   SERVO_STEP_DEG      = 3;
 inline constexpr int   SERVO_STEP_INTERVAL = 20;
 
 #define PIN_RELAY           27
+#define PIN_LED_RELAY       5    // LED indikator relay terputus
 
 // ===== Motor Config (L298N IN1) =====
 #define PIN_MOTOR           14
